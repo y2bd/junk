@@ -1,6 +1,6 @@
 local Input = {}
 
-Input.MAX_INPUT_BUFFER = 4
+Input.MAX_INPUT_BUFFER = 1
 
 Input.VALID_KEYS = {
     left = true,

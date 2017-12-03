@@ -64,7 +64,7 @@ sizes[3] = {3, 3}
 sizes[4] = {3, 3}
 sizes[5] = {3, 3}
 sizes[6] = {3, 3}
-sizes[7] = {3, 4}
+sizes[7] = {4, 4}
 
 local colors = {}
 colors[1] = {255, 0, 0}
