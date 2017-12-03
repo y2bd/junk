@@ -75,6 +75,16 @@ colors[5] = {0, 255, 255}
 colors[6] = {0, 0, 255}
 colors[7] = {255, 255, 255}
 
+love.graphics.setDefaultFilter("nearest", "nearest", 1)
+local imgs = {}
+imgs[1] = love.graphics.newImage("assets/01.png")
+imgs[2] = love.graphics.newImage("assets/02.png")
+imgs[3] = love.graphics.newImage("assets/03.png")
+imgs[4] = love.graphics.newImage("assets/04.png")
+imgs[5] = love.graphics.newImage("assets/05.png")
+imgs[6] = love.graphics.newImage("assets/06.png")
+imgs[7] = love.graphics.newImage("assets/07.png")
+
 local beamKick = {}
 beamKick["12"] = {{0,0},{-2,0},{1,0},{-2,-1},{1,2}}
 beamKick["21"] = {{0,0},{2,0},{-1,0},{2,1},{-1,-2}}
@@ -98,6 +108,7 @@ wallKick["14"] = {{0,0},{1,0},{1,1},{0,-2},{1,-2}}
 Tetris.pieces = pieces
 Tetris.sizes = sizes
 Tetris.colors = colors
+Tetris.imgs = imgs
 
 Tetris.beamKick = beamKick
 Tetris.wallKick = wallKick

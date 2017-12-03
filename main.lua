@@ -1,6 +1,8 @@
 local Matrix = require("matrix")
 local Tetris = require("tetris")
 local Input = require("input")
+local Net = require("net")
+local Dialogue = require("dialogue")
 
 local MIN_ROWS = 16
 local COLS = 10
@@ -11,13 +13,42 @@ local ROW_SHRINK = 6
 local SHRINK_BUFFER = 14
 local currentRows = 16
 
-local FALL_ELAPSE = 0.25
+local FALL_ELAPSE = 0.6
 local GROUND_ELAPSE = 0.2
 
 local viewportDelta = 0
 local VIEWPORT_SCROLL = 12
-local VIEWPORT_BUFFER = 13
+local VIEWPORT_BUFFER = 12
 local VIEWPORT_SLAM_BUFFER = 4
+
+local GAME_TIME = 121
+
+local MAX_LINE = 24
+
+
+
+local ControlStates = {
+    LOAD_BOARD={},
+    SAVE_BOARD={},
+    DONE={},
+
+    INTRO={},
+    OUTRO={},
+
+    SPAWN={},
+    FALL={},
+    GROUND={},
+    COMPLETE={},
+    COLLAPSE={},
+    GROW={},
+    SHRINK={},
+    SCROLL_DOWN={},
+    SCROLL_UP={},
+
+
+}
+
+local ControlState = ControlStates.INTRO
 
 -- fix
 _coroutine_resume = coroutine.resume
@@ -29,14 +60,30 @@ function coroutine.resume(...)
 	return state,result
 end
 
+-- goddamn hoisting
+local function getNumberOfLines()
+    for i=1,currentRows do
+        for j=1,COLS do
+            if board[i * COLS + j] ~= 0 then
+                return currentRows - i + 1
+            end
+        end
+    end
+
+    return 0
+end
+
 local function drawBoard(board, rows, cols)
     local totalWidth = TILE_SIZE * cols;
     local totalHeight = TILE_SIZE * rows;
     local left = (WIN_WIDTH - totalWidth) / 5
     local top = TILE_SIZE * 2
 
-    love.graphics.setColor(256, 256, 256, 256)
-    love.graphics.rectangle("line", left, top, TILE_SIZE * COLS, TILE_SIZE * MIN_ROWS)
+    love.graphics.setColor(16, 16, 16, 256)
+    love.graphics.rectangle("fill", left-8, top-8, TILE_SIZE * COLS + 16, TILE_SIZE * MIN_ROWS + 16)
+
+    love.graphics.setColor(196, 196, 196, 196)
+    love.graphics.rectangle("line", left-8, top-8, TILE_SIZE * COLS + 16, TILE_SIZE * MIN_ROWS + 16)
 
     for i=1,math.min(rows,MIN_ROWS) do
         for j=1,cols do
@@ -49,10 +96,13 @@ local function drawBoard(board, rows, cols)
                 if val > 7 then
                     alpha = 128
                     val = val - 7
+
                 end
 
-                love.graphics.setColor(Tetris.colors[val][1], Tetris.colors[val][2], Tetris.colors[val][3], alpha)
-                love.graphics.rectangle("fill", x, y, TILE_SIZE, TILE_SIZE)
+                -- love.graphics.setColor(Tetris.colors[val][1], Tetris.colors[val][2], Tetris.colors[val][3], alpha)
+                love.graphics.setColor(255, 255, 255, alpha)
+                love.graphics.draw(Tetris.imgs[val], x, y, 0, 0.5)
+                -- love.graphics.rectangle("fill", x, y, TILE_SIZE, TILE_SIZE)
             end
         end
     end
@@ -61,41 +111,108 @@ local function drawBoard(board, rows, cols)
     local nextLeft = left + TILE_SIZE * (COLS + 2)
     local nextTop = top
 
-    love.graphics.setColor(256, 256, 256, 256)
-    love.graphics.rectangle("line", nextLeft, nextTop, TILE_SIZE * 4, TILE_SIZE * 4)
-    for i=1,Tetris.sizes[nextPiece][1] do
-        for j=1,Tetris.sizes[nextPiece][2] do
-            local val = Tetris.pieces[nextPiece][i * Tetris.sizes[nextPiece][2] + j]
-            local x = nextLeft + (j-1) * TILE_SIZE + (4 - Tetris.sizes[nextPiece][1]) * 0.5 * TILE_SIZE
-            local y = nextTop + (i-1) * TILE_SIZE + (4 - Tetris.sizes[nextPiece][2]) * 1 * TILE_SIZE
+    love.graphics.setColor(16, 16, 16, 256)
+    love.graphics.rectangle("fill", nextLeft-8, nextTop-8, TILE_SIZE * 4 + 16, TILE_SIZE * 4 + 16)
 
-            if val ~= 0 and val ~= nil then
-                local alpha = 255
-                if val > 7 then
-                    alpha = 128
-                    val = val - 7
+    love.graphics.setColor(196, 196, 196, 196)
+    love.graphics.rectangle("line", nextLeft-8, nextTop-8, TILE_SIZE * 4 + 16, TILE_SIZE * 4 + 16)
+
+    love.graphics.setColor(16, 16, 16, 256)
+    love.graphics.rectangle("fill", nextLeft-8, (nextTop+TILE_SIZE*5)-8, TILE_SIZE * 4 + 16, TILE_SIZE * 11 + 16)
+
+    love.graphics.setColor(196, 196, 196, 196)
+    love.graphics.rectangle("line", nextLeft-8, (nextTop+TILE_SIZE*5)-8, TILE_SIZE * 4 + 16, TILE_SIZE * 11 + 16)
+    
+
+    -- draw timer
+    if timerActive then
+        for i=1,Tetris.sizes[nextPiece][1] do
+            for j=1,Tetris.sizes[nextPiece][2] do
+                local val = Tetris.pieces[nextPiece][i * Tetris.sizes[nextPiece][2] + j]
+                local x = nextLeft + (j-1) * TILE_SIZE + (4 - Tetris.sizes[nextPiece][1]) * 0.5 * TILE_SIZE
+                local y = nextTop + (i-1) * TILE_SIZE + (4 - Tetris.sizes[nextPiece][2]) * 1 * TILE_SIZE
+    
+                if nextPiece == 1 then
+                    y = y + TILE_SIZE / 2
                 end
-
-                love.graphics.setColor(Tetris.colors[val][1], Tetris.colors[val][2], Tetris.colors[val][3], alpha)
-                love.graphics.rectangle("fill", x, y, TILE_SIZE, TILE_SIZE)
+    
+                if val ~= 0 and val ~= nil then
+                    local alpha = 255
+                    if val > 7 then
+                        alpha = 128
+                        val = val - 7
+                    end
+    
+                    love.graphics.setColor(255, 255, 255, alpha)
+                    love.graphics.draw(Tetris.imgs[val], x, y, 0, 0.5)
+                end
             end
+        end 
+
+        love.graphics.setColor(256, 256, 256, 256)
+        love.graphics.setFont(timerFont)
+
+        if timer < 30 then
+            love.graphics.setColor(256, 32, 32, 256)
+        end
+        local timerLeft = nextLeft + 12
+        local timerTop = nextTop + TILE_SIZE * 5.6
+        timerText = tostring(math.floor(timer))
+        while #timerText < 4 do
+            timerText = "0" .. timerText
+        end
+
+        love.graphics.print("time", timerLeft, timerTop)
+        love.graphics.print(timerText, timerLeft, timerTop + 48)
+
+        love.graphics.setColor(256, 256, 256, 256)
+        tallText = tostring(currentTall)
+        while #tallText < 4 do
+            tallText = "0" .. tallText
+        end
+
+        love.graphics.print("junk", timerLeft, timerTop + 112)
+        love.graphics.print(tallText, timerLeft, timerTop + 112 + 48)
+
+        tookText = tostring(tookLines)
+        while #tookText < 4 do
+            tookText = "0" .. tookText
+        end
+
+        love.graphics.print("work", timerLeft, timerTop + 224)
+        love.graphics.print(tookText, timerLeft, timerTop + 224 + 48)
+    end
+
+    if ControlState == ControlStates.INTRO then
+        love.graphics.setColor(0, 0, 0, 196)
+        love.graphics.rectangle("fill", 0, 0, WIN_WIDTH, WIN_HEIGHT)
+
+        love.graphics.setColor(256, 256, 256, 256)
+        love.graphics.setFont(chatFont)
+
+        love.graphics.print(intro.currentTextRender or "", TILE_SIZE * 3, TILE_SIZE * 7)
+    end
+
+    if ControlState == ControlStates.OUTRO then
+        
+        love.graphics.setColor(0, 0, 0, 196)
+        love.graphics.rectangle("fill", 0, 0, WIN_WIDTH, WIN_HEIGHT)
+
+        love.graphics.setColor(256, 256, 256, 256)
+        love.graphics.setFont(chatFont)
+
+        if outroRunner == -1 then
+            love.graphics.print("Enter your name: ", TILE_SIZE * 3, TILE_SIZE * 6)
+            love.graphics.print(outro.username, TILE_SIZE * 3, TILE_SIZE * 8)
+
+            love.graphics.print("<Press Enter to Save and Play Again>", TILE_SIZE * 3, TILE_SIZE * 10)
+            love.graphics.print("<Press Escape to Save and Quit>", TILE_SIZE * 3, TILE_SIZE * 11)
+        else
+
+            love.graphics.print(outro.currentTextRender or "", TILE_SIZE * 3, TILE_SIZE * 7)
         end
     end
 end
-
-local ControlStates = {
-    SPAWN={},
-    FALL={},
-    GROUND={},
-    COMPLETE={},
-    COLLAPSE={},
-    GROW={},
-    SHRINK={},
-    SCROLL_DOWN={},
-    SCROLL_UP={},
-}
-
-local ControlState = ControlStates.SPAWN
 
 local function shuffle(array)
     len = #array
@@ -192,7 +309,28 @@ local function getSlamRow(forColumn, startRow, withSpin)
 end
 
 function love.keypressed(key, scan, isrepeat)
-    if ControlState == ControlStates.SPAWN or
+    if ControlState == ControlStates.OUTRO and outroRunner == -1 then
+        if key == "backspace" then
+            outro.username = string.sub(outro.username, 1, -2)
+        end
+
+        if key == "return" then
+            ControlState = ControlStates.SAVE_BOARD
+            pleaseRestart = true
+        end
+
+        if key == "escape" then
+            ControlState = ControlStates.SAVE_BOARD
+            pleaseRestart = false
+        end
+    elseif ControlState == ControlStates.OUTRO then
+        if key == "escape" then
+            outroRunner = -1
+        end
+    end
+
+    if ControlState == ControlStates.INTRO or
+       ControlState == ControlStates.SPAWN or
        ControlState == ControlStates.FALL or
        ControlState == ControlStates.GROUND then
 
@@ -200,11 +338,37 @@ function love.keypressed(key, scan, isrepeat)
     end
 end
 
+function love.keyreleased(key)
+    Input.keyReleased(key)
+end
+
+function love.textinput(text)
+    if ControlState == ControlStates.OUTRO and outroRunner == -1 then
+        if #outro.username > 24 then
+            return
+        end
+
+        if Input.TYPING_KEYS[text] then 
+            outro.username = outro.username .. text
+        end
+
+        if text == " " then
+            outro.username = outro.username .. "_"
+        end
+    end
+end
+
 function love.load()
     print("Starting the game ...")
     math.randomseed( os.time() )
 
-    love.keyboard.setKeyRepeat(true)
+    love.keyboard.setKeyRepeat(false)
+    love.graphics.setDefaultFilter("nearest", "nearest", 1)
+    love.graphics.setBackgroundColor(38, 38, 38, 255)
+    love.graphics.setLineWidth(4)
+
+    timerFont = love.graphics.newFont("fonts/coders_crux.ttf", 72)
+    chatFont = love.graphics.newFont("fonts/coders_crux.ttf", 36)
 
     WIN_WIDTH, WIN_HEIGHT = love.window.getMode()
     TILE_SIZE = ((WIN_WIDTH + WIN_HEIGHT) / 4) / COLS;  
@@ -214,10 +378,40 @@ function love.load()
 
     currentBagIndex = 1
 
-    currentPiece = 4
+    currentPiece = currentBag[1]
+    nextPiece = currentBag[2]
     currentPieceRow = 2
     currentPieceCol = 4
     currentPieceSpin = 1
+
+    shouldLoadBoard = true
+    tookLines = 0
+
+    intro = {
+        currentLine = 1,
+        currentTextRender = "",
+    }
+
+    outro = {
+        currentLine = 1,
+        currentTextRender= "",
+        rank = Dialogue.outroLazy,
+        username = "",
+    }
+
+    timerActive = false
+    timer = GAME_TIME
+
+    local bn, lm, nm, bd = Net.getBoard()
+    if bn ~= -1 then
+        returnBoardNumber = bn
+        print(returnBoardNumber)
+        returnName = nm
+        returnTimestamp = lm
+        loadedBoard = bd
+    end
+
+    print(bd)
 
     board = Matrix.create(currentRows, COLS, 0)
 end
@@ -226,11 +420,17 @@ local collapser = function (board)
     local needToCollapse = false
     local bottomRow = nil
 
+    topRow = nil
     for i=1,currentRows do
         local fullRow = true
+        local emptyRow = false
         for j=1,COLS do
             if board[i * COLS + j] == 0 then
                 fullRow = false
+            end
+
+            if topRow == nil and board[i * COLS + j] ~= 0 then
+                topRow = i
             end
         end
 
@@ -263,6 +463,8 @@ local collapser = function (board)
                 table.remove(board, i * COLS + j)
                 table.insert(board, 1 * COLS + 1, 0)
             end
+
+            tookLines = tookLines + 1
         end
     end
 
@@ -402,14 +604,162 @@ local scrollUp = function ()
     end
 end
 
+local boardLoader = function(args)
+    for delay=1,25 do
+        args = coroutine.yield({board, boardStr})
+    end
+
+    local board = args[1]
+    local boardStr = args[2]
+
+    local boardStrIndex = #boardStr
+
+    local insertRows = math.floor(#boardStr / COLS)
+    currentRows = insertRows
+
+    local drewAnything = false
+    for i=insertRows,1,-1 do
+        for j=COLS,1,-1 do
+            board[i * COLS + j] = tonumber(string.sub(boardStr, boardStrIndex, boardStrIndex))
+            if board[i * COLS + j] ~= 0 then drewAnything = true end
+
+            boardStrIndex = boardStrIndex - 1
+        end
+
+        
+        if drewAnything then
+            for delay=1,6 do
+                args = coroutine.yield({board, boardStr})
+            end
+        end
+
+        viewportDelta = math.max(math.min(insertRows - 16, i - 6) - 1, 0)
+
+        board = args[1]
+        boardStr = args[2]
+    end
+
+    for delay=1,25 do
+        args = coroutine.yield({board, boardStr})
+    end
+
+    return {board, boardStr}
+end
+
 function love.update(dt)
+    if ControlState == ControlStates.INTRO then
+        if introRunner == nil then
+            introRunner = coroutine.create(Dialogue.speak)
+        end
+
+        if coroutine.status(introRunner) == 'dead' then
+            introRunner = coroutine.create(Dialogue.speak)
+            intro.currentLine = intro.currentLine + 1
+            intro.currentTextRender = ""
+
+            if intro.currentLine > #Dialogue.lines then
+                introRunner = nil
+                ControlState = ControlStates.LOAD_BOARD
+            end
+        else
+            if intro.currentLine == Dialogue.nameLine then
+                _, args = coroutine.resume(introRunner, { Dialogue.lines[intro.currentLine] .. "..." .. returnName .. "?                     ", MAX_LINE, intro.currentTextRender })
+            else
+                _, args = coroutine.resume(introRunner, { Dialogue.lines[intro.currentLine], MAX_LINE, intro.currentTextRender })
+            end
+
+            intro.currentTextRender = args[3]
+        end
+
+        if Input.pollInput("escape") then
+            introRunner = nil
+            ControlState = ControlStates.LOAD_BOARD
+        end
+    elseif ControlState == ControlStates.OUTRO then
+        if outroRunner == nil then
+            outroRunner = coroutine.create(Dialogue.speak)
+        end
+
+        if outroRunner ~= -1 and coroutine.status(outroRunner) == 'dead' then
+            outroRunner = coroutine.create(Dialogue.speak)
+            outro.currentLine = outro.currentLine + 1
+            outro.currentTextRender = ""
+
+            if outro.currentLine > #(outro.rank) then
+                outro.currentLine = #(outro.rank)
+                outroRunner = -1
+            end
+        elseif outroRunner ~= -1 then
+            _, args = coroutine.resume(outroRunner, { outro.rank[outro.currentLine], MAX_LINE, outro.currentTextRender })
+            outro.currentTextRender = args[3]
+        end
+    elseif ControlState == ControlStates.LOAD_BOARD then
+        if currentBoardLoader == nil then
+            currentBoardLoader = coroutine.create(boardLoader)
+        end
+
+        -- collapse empty rows
+        if coroutine.status(currentBoardLoader) == 'dead' then
+            ControlState = ControlStates.SPAWN
+            currentBoardLoader = nil
+        else
+            _, res = coroutine.resume(currentBoardLoader, { board, loadedBoard })
+            
+            return
+        end
+    elseif ControlState == ControlStates.SAVE_BOARD then
+        if returnBoardNumber ~= nil then
+            if #(outro.username) <= 0 then
+                outro.username = "bl4nk_sp4ce"
+            end
+
+            Net.saveBoard(returnBoardNumber, returnTimestamp, outro.username or "john_titor", Matrix.asString(board, currentRows, COLS))
+            ControlState = ControlStates.DONE
+        end
+        return
+    elseif ControlState == ControlStates.DONE then
+        if pleaseRestart then
+            love.event.quit( "restart" )
+        else
+            love.event.quit()
+        end
+    end
+
     if currentBagIndex > #currentBag then
         currentBag = nextBag
         nextBag = shuffle({1,2,3,4,5,6,7})
         currentBagIndex = 1
     end
 
+    if timerActive then
+        timer = timer - dt
+        
+        if timer <= 0 then
+            ControlState = ControlStates.OUTRO
+            timer = 0
+            timerActive = false
+
+            if currentTall - startingTall <= 0 then
+                if tookLines >= 30 then
+                    outro.rank = Dialogue.outroGreat
+                else
+                    outro.rank = Dialogue.outroGood
+                end
+            else
+                if tookLines >= 20 then
+                    outro.rank = Dialogue.outroLazy
+                else
+                    outro.rank = Dialogue.outroBad
+                end
+            end
+        end
+    end
+
     if ControlState == ControlStates.SPAWN then
+        if not timerActive then
+            timerActive = true
+        end
+
         currentPiece = currentBag[currentBagIndex]
         if currentBagIndex >= 7 then
             nextPiece = nextBag[1]
@@ -417,12 +767,19 @@ function love.update(dt)
             nextPiece = currentBag[currentBagIndex + 1]
         end
 
+        bn, lm, bd = Net.getBoard()
+
         currentBagIndex = currentBagIndex + 1
 
         currentPieceRow, currentPieceCol = spawn(board, currentPiece)
         currentPieceSpin = 1
 
-        fallTimer = 0
+        currentTall = getNumberOfLines()
+        if startingTall == nil then
+            startingTall = currentTall
+        end
+
+        fallTimer = -0.2
         ControlState = ControlStates.FALL
     elseif ControlState == ControlStates.FALL then
         -- only allowed to buffer down when falling so we don't carry onto next piece accidentally
@@ -466,6 +823,8 @@ function love.update(dt)
             currentPieceRow = currentPieceRowNext
             currentPieceCol = currentPieceColNext
             currentPieceSpin = currentPieceSpinNext
+            
+            Input.updatePost(dt)
             return
         end
 
@@ -556,6 +915,8 @@ function love.update(dt)
             currentPieceCol = currentPieceColNext
             currentPieceSpin = currentPieceSpinNext
             ControlState = ControlStates.FALL
+            
+            Input.updatePost(dt)
             return
         end
 
@@ -619,10 +980,12 @@ function love.update(dt)
         end
     end
 
+    Input.updatePost(dt)
 end
 
 function love.draw()
     -- Matrix.print(getCurrentPiece(), Tetris.sizes[currentPiece][1], Tetris.sizes[currentPiece][2])
+
     local boardWithGhost = board
     if ControlState == ControlStates.FALL or ControlState == ControlStates.SCROLL_DOWN then
         local ghostRow = getSlamRow(currentPieceCol, currentPieceRow, currentPieceSpin)

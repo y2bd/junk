@@ -130,4 +130,15 @@ function Matrix.print(matrix, rows, cols)
     end
 end
 
+function Matrix.asString(matrix, rows, cols)
+    local s = ""
+    for i=1,rows do
+        for j=1,cols do
+            local val = matrix[i * cols + j]
+            s = s .. tostring(val)
+        end
+    end
+    return s
+end
+
 return Matrix
