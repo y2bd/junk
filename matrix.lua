@@ -1,5 +1,13 @@
 local Matrix = {}
 
+local function getIn(m, i, j, c)
+    return m[i * c + j]
+end
+
+local function setIn(v, m, i, j, c)
+    m[i * c + j] = v
+end
+
 function Matrix.create(rows, cols, default)
     local mat = {}
     for i=1,rows do
@@ -16,6 +24,54 @@ function Matrix.copy(rows, cols, from)
     for i=1,rows do
         for j=1,cols do
             mat[i * cols + j] = from[i * cols + j]
+        end
+    end
+
+    return mat
+end
+
+function Matrix.rotate90C(base, rows, cols)
+    local mat = {}
+    for i=1,rows do
+        for j=1,cols do
+            setIn(getIn(base, i, j, cols), mat, (cols-j + 1), i, cols)
+        end
+    end
+
+    return mat
+end
+
+function Matrix.rotate90CC(base, rows, cols)
+    local mat = {}
+    for i=1,rows do
+        for j=1,cols do
+            setIn(getIn(base, i, j, cols), mat, j, (rows-i+1), cols)
+        end
+    end
+
+    return mat
+end
+
+function Matrix.rotate180(base, rows, cols)
+    local mat = {}
+    for i=1,rows do
+        for j=1,cols do
+            setIn(getIn(base, i, j, cols), mat, (rows-i+1), (cols-j+1), cols)
+        end
+    end
+
+    return mat
+end
+
+function Matrix.ghostify(base, rows, cols)
+    local mat = {}
+    for i=1,rows do
+        for j=1,cols do
+            local source = base[i * cols + j]
+            if source > 0 then
+                source = source + 7
+            end
+            mat[i * cols + j] = source
         end
     end
 
@@ -46,18 +102,15 @@ function Matrix.collides(base, rows, cols, target, tr, tc, ti, tj)
 
             if (t ~= 0) then
                 if j < 1 or j > cols then 
-                    print("SIDEOFF")
                     return true
                 end
             end
 
             if b == nil and (t ~= 0) then
-                print("OFFSIDES")
                 return true
             end
 
             if (b ~= 0) and (t ~= 0) then
-                print("COL")
                 return true
             end
         end
