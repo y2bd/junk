@@ -107,6 +107,16 @@ local function drawBoard(board, rows, cols)
         end
     end
 
+    if showTitle then
+        love.graphics.setColor(256, 256, 256, 256)
+        love.graphics.setFont(timerFont)
+
+        love.graphics.print("JUNK", left + TILE_SIZE * COLS / 2 - 60, top + TILE_SIZE * 3)
+
+        love.graphics.setFont(chatFont)
+        love.graphics.print("a game\nby y2bd", left + TILE_SIZE * COLS / 2 - 60, top + TILE_SIZE * 4)
+    end
+
     -- draw next piece
     local nextLeft = left + TILE_SIZE * (COLS + 2)
     local nextTop = top
@@ -639,7 +649,12 @@ local boardLoader = function(args)
         boardStr = args[2]
     end
 
-    for delay=1,25 do
+    showTitle = true
+    for delay=1,65 do
+        args = coroutine.yield({board, boardStr})
+    end
+    showTitle = false
+    for delay=1,15 do
         args = coroutine.yield({board, boardStr})
     end
 
