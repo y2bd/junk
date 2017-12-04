@@ -782,8 +782,6 @@ function love.update(dt)
             nextPiece = currentBag[currentBagIndex + 1]
         end
 
-        bn, lm, bd = Net.getBoard()
-
         currentBagIndex = currentBagIndex + 1
 
         currentPieceRow, currentPieceCol = spawn(board, currentPiece)
