@@ -3,6 +3,7 @@ local Tetris = require("tetris")
 local Input = require("input")
 local Net = require("net")
 local Dialogue = require("dialogue")
+local Save = require("save")
 
 local MIN_ROWS = 16
 local COLS = 10
@@ -73,6 +74,41 @@ local function getNumberOfLines()
     return 0
 end
 
+local SAVE_BOARD = false
+local savedBoard = false
+local function saveBoard(board, rows, cols)
+    if SAVE_BOARD and (not savedBoard) then
+        if ControlState == ControlStates.FALL then
+            local canv = love.graphics.newCanvas(cols * TILE_SIZE, rows * TILE_SIZE)
+            love.graphics.setCanvas(canv)
+                for i=1,rows do
+                    for j=1,cols do
+                        local val = board[i * cols + j]
+                        local x = 0 + (j-1) * TILE_SIZE
+                        local y = 0 + (i-1) * TILE_SIZE
+            
+                        if val ~= 0 and val ~= nil and val <= 7 then
+                            local alpha = 255
+                            -- love.graphics.setColor(Tetris.colors[val][1], Tetris.colors[val][2], Tetris.colors[val][3], alpha)
+                            love.graphics.setColor(255, 255, 255, alpha)
+                            love.graphics.draw(Tetris.imgs[val], x, y, 0, 0.5)
+                            -- love.graphics.rectangle("fill", x, y, TILE_SIZE, TILE_SIZE)
+                        end
+                    end
+                end
+            love.graphics.setCanvas()
+
+            local id = canv:newImageData()
+            id:encode("png", "board_" .. tostring(returnBoardNumber) .. ".png")
+            print("output!!")
+
+            savedBoard = true
+        end
+    end
+
+    return
+end
+
 local function drawBoard(board, rows, cols)
     local totalWidth = TILE_SIZE * cols;
     local totalHeight = TILE_SIZE * rows;
@@ -94,7 +130,7 @@ local function drawBoard(board, rows, cols)
             if val ~= 0 and val ~= nil then
                 local alpha = 255
                 if val > 7 then
-                    alpha = 128
+                    alpha = 48
                     val = val - 7
 
                 end
@@ -109,12 +145,20 @@ local function drawBoard(board, rows, cols)
 
     if showTitle then
         love.graphics.setColor(256, 256, 256, 256)
-        love.graphics.setFont(timerFont)
 
-        love.graphics.print("JUNK", left + TILE_SIZE * COLS / 2 - 60, top + TILE_SIZE * 3)
+        if isAwesome then
+            love.graphics.setFont(timerFont)
+            love.graphics.print("JUNK", left + TILE_SIZE * COLS / 2 - 60, top + TILE_SIZE * 3)
 
-        love.graphics.setFont(chatFont)
-        love.graphics.print("a game\nby y2bd", left + TILE_SIZE * COLS / 2 - 60, top + TILE_SIZE * 4)
+            love.graphics.setFont(chatFont)
+            love.graphics.printf("a board by\n" .. returnName, left + TILE_SIZE * COLS / 2 - 60, top + TILE_SIZE * 4.2, 140)
+        else
+            love.graphics.setFont(timerFont)
+            love.graphics.print("JUNK", left + TILE_SIZE * COLS / 2 - 60, top + TILE_SIZE * 3)
+
+            love.graphics.setFont(chatFont)
+            love.graphics.print("a game\nby y2bd", left + TILE_SIZE * COLS / 2 - 60, top + TILE_SIZE * 4)
+        end
     end
 
     -- draw next piece
@@ -133,9 +177,8 @@ local function drawBoard(board, rows, cols)
     love.graphics.setColor(196, 196, 196, 196)
     love.graphics.rectangle("line", nextLeft-8, (nextTop+TILE_SIZE*5)-8, TILE_SIZE * 4 + 16, TILE_SIZE * 11 + 16)
     
-
     -- draw timer
-    if timerActive then
+    if timerActive or ControlState == ControlStates.OUTRO then
         for i=1,Tetris.sizes[nextPiece][1] do
             for j=1,Tetris.sizes[nextPiece][2] do
                 local val = Tetris.pieces[nextPiece][i * Tetris.sizes[nextPiece][2] + j]
@@ -175,7 +218,11 @@ local function drawBoard(board, rows, cols)
         love.graphics.print("time", timerLeft, timerTop)
         love.graphics.print(timerText, timerLeft, timerTop + 48)
 
-        love.graphics.setColor(256, 256, 256, 256)
+        if startingTall > currentTall then
+            love.graphics.setColor(32, 256, 64, 256)
+        else
+            love.graphics.setColor(256, 256, 256, 256)
+        end
         tallText = tostring(currentTall)
         while #tallText < 4 do
             tallText = "0" .. tallText
@@ -184,6 +231,7 @@ local function drawBoard(board, rows, cols)
         love.graphics.print("junk", timerLeft, timerTop + 112)
         love.graphics.print(tallText, timerLeft, timerTop + 112 + 48)
 
+        love.graphics.setColor(256, 256, 256, 256)
         tookText = tostring(tookLines)
         while #tookText < 4 do
             tookText = "0" .. tookText
@@ -201,6 +249,10 @@ local function drawBoard(board, rows, cols)
         love.graphics.setFont(chatFont)
 
         love.graphics.print(intro.currentTextRender or "", TILE_SIZE * 3, TILE_SIZE * 7)
+
+        if isAwesome then
+            love.graphics.print("(press esc to skip)", TILE_SIZE * 3, TILE_SIZE * 17)
+        end
     end
 
     if ControlState == ControlStates.OUTRO then
@@ -218,8 +270,10 @@ local function drawBoard(board, rows, cols)
             love.graphics.print("<Press Enter to Save and Play Again>", TILE_SIZE * 3, TILE_SIZE * 10)
             love.graphics.print("<Press Escape to Save and Quit>", TILE_SIZE * 3, TILE_SIZE * 11)
         else
-
             love.graphics.print(outro.currentTextRender or "", TILE_SIZE * 3, TILE_SIZE * 7)
+            if isAwesome then
+                love.graphics.print("(press esc to skip)", TILE_SIZE * 3, TILE_SIZE * 17)
+            end
         end
     end
 end
@@ -422,6 +476,12 @@ function love.load()
     end
 
     print(bd)
+
+    isAwesome = Save.isAwesome()
+    if isAwesome then
+        print(isAwesome .. " is awesome")
+        outro.username = isAwesome
+    end
 
     board = Matrix.create(currentRows, COLS, 0)
 end
@@ -638,7 +698,12 @@ local boardLoader = function(args)
 
         
         if drewAnything then
-            for delay=1,6 do
+            del = 6
+            if isAwesome then
+                del = 3
+            end
+
+            for delay=1,del do
                 args = coroutine.yield({board, boardStr})
             end
         end
@@ -650,7 +715,11 @@ local boardLoader = function(args)
     end
 
     showTitle = true
-    for delay=1,65 do
+    local boardLen = 65
+    if isAwesome then
+        boardLen = 90
+    end
+    for delay=1,boardLen do
         args = coroutine.yield({board, boardStr})
     end
     showTitle = false
@@ -663,6 +732,8 @@ end
 
 function love.update(dt)
     if ControlState == ControlStates.INTRO then
+        
+
         if introRunner == nil then
             introRunner = coroutine.create(Dialogue.speak)
         end
@@ -709,6 +780,7 @@ function love.update(dt)
             outro.currentTextRender = args[3]
         end
     elseif ControlState == ControlStates.LOAD_BOARD then
+
         if currentBoardLoader == nil then
             currentBoardLoader = coroutine.create(boardLoader)
         end
@@ -724,11 +796,16 @@ function love.update(dt)
         end
     elseif ControlState == ControlStates.SAVE_BOARD then
         if returnBoardNumber ~= nil then
-            if #(outro.username) <= 0 then
-                outro.username = "bl4nk_sp4ce"
+            if outro.username == nil or #(outro.username) <= 0 then
+                outro.username = "john_titor"
             end
 
-            Net.saveBoard(returnBoardNumber, returnTimestamp, outro.username or "john_titor", Matrix.asString(board, currentRows, COLS))
+            if isAwesome ~= nil then
+                Save.save(outro.username)
+                isAwesome = nil
+            end
+
+            Net.saveBoard(returnBoardNumber, returnTimestamp, outro.username, Matrix.asString(board, currentRows, COLS))
             ControlState = ControlStates.DONE
         end
         return
@@ -1020,4 +1097,5 @@ function love.draw()
 
     -- Matrix.print(currentBoard, currentRows, COLS)
     drawBoard(currentBoard, currentRows, COLS)
+    saveBoard(currentBoard, currentRows, COLS)
 end
