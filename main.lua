@@ -992,8 +992,13 @@ function love.update(dt)
         if Input.pollInput("right") then 
             if not collides(currentPieceRowNext, currentPieceColNext + 1, currentPieceSpinNext) then
                 currentPieceColNext = currentPieceColNext + 1
-                groundTimer = 0
+                groundTimer = -GROUND_ELAPSE
             end
+        end
+
+        if Input.pollInput("up") then 
+            -- you can lock in pieces that are grounded by hard-dropping
+            groundTimer = GROUND_ELAPSE
         end
 
         -- if a movement gave us space to fall again
