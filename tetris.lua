@@ -44,7 +44,7 @@ local function fix(arr, width)
         io.write(i-width)
         real[i]=arr[i-width]
     end
-    print("")
+    -- print("")
     return real
 end
 

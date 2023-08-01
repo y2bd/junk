@@ -51,6 +51,11 @@ local ControlStates = {
 
 local ControlState = ControlStates.INTRO
 
+-- porting to love2d v11+
+local setColorF = function(r, g, b, a)
+    love.graphics.setColor(r / 255.0, g / 255.0, b / 255.0, a / 255.0)
+end
+
 -- fix
 _coroutine_resume = coroutine.resume
 function coroutine.resume(...)
@@ -89,8 +94,8 @@ local function saveBoard(board, rows, cols)
             
                         if val ~= 0 and val ~= nil and val <= 7 then
                             local alpha = 255
-                            -- love.graphics.setColor(Tetris.colors[val][1], Tetris.colors[val][2], Tetris.colors[val][3], alpha)
-                            love.graphics.setColor(255, 255, 255, alpha)
+                            -- setColorF(Tetris.colors[val][1], Tetris.colors[val][2], Tetris.colors[val][3], alpha)
+                            setColorF(255, 255, 255, alpha)
                             love.graphics.draw(Tetris.imgs[val], x, y, 0, 0.5)
                             -- love.graphics.rectangle("fill", x, y, TILE_SIZE, TILE_SIZE)
                         end
@@ -100,7 +105,7 @@ local function saveBoard(board, rows, cols)
 
             local id = canv:newImageData()
             id:encode("png", "board_" .. tostring(returnBoardNumber) .. ".png")
-            print("output!!")
+            -- print("output!!")
 
             savedBoard = true
         end
@@ -115,10 +120,10 @@ local function drawBoard(board, rows, cols)
     local left = (WIN_WIDTH - totalWidth) / 5
     local top = TILE_SIZE * 2
 
-    love.graphics.setColor(16, 16, 16, 256)
+    setColorF(16, 16, 16, 256)
     love.graphics.rectangle("fill", left-8, top-8, TILE_SIZE * COLS + 16, TILE_SIZE * MIN_ROWS + 16)
 
-    love.graphics.setColor(196, 196, 196, 196)
+    setColorF(196, 196, 196, 196)
     love.graphics.rectangle("line", left-8, top-8, TILE_SIZE * COLS + 16, TILE_SIZE * MIN_ROWS + 16)
 
     for i=1,math.min(rows,MIN_ROWS) do
@@ -135,8 +140,8 @@ local function drawBoard(board, rows, cols)
 
                 end
 
-                -- love.graphics.setColor(Tetris.colors[val][1], Tetris.colors[val][2], Tetris.colors[val][3], alpha)
-                love.graphics.setColor(255, 255, 255, alpha)
+                -- setColorF(Tetris.colors[val][1], Tetris.colors[val][2], Tetris.colors[val][3], alpha)
+                setColorF(255, 255, 255, alpha)
                 love.graphics.draw(Tetris.imgs[val], x, y, 0, 0.5)
                 -- love.graphics.rectangle("fill", x, y, TILE_SIZE, TILE_SIZE)
             end
@@ -144,7 +149,7 @@ local function drawBoard(board, rows, cols)
     end
 
     if showTitle then
-        love.graphics.setColor(256, 256, 256, 256)
+        setColorF(256, 256, 256, 256)
 
         if isAwesome then
             love.graphics.setFont(timerFont)
@@ -165,16 +170,16 @@ local function drawBoard(board, rows, cols)
     local nextLeft = left + TILE_SIZE * (COLS + 2)
     local nextTop = top
 
-    love.graphics.setColor(16, 16, 16, 256)
+    setColorF(16, 16, 16, 256)
     love.graphics.rectangle("fill", nextLeft-8, nextTop-8, TILE_SIZE * 4 + 16, TILE_SIZE * 4 + 16)
 
-    love.graphics.setColor(196, 196, 196, 196)
+    setColorF(196, 196, 196, 196)
     love.graphics.rectangle("line", nextLeft-8, nextTop-8, TILE_SIZE * 4 + 16, TILE_SIZE * 4 + 16)
 
-    love.graphics.setColor(16, 16, 16, 256)
+    setColorF(16, 16, 16, 256)
     love.graphics.rectangle("fill", nextLeft-8, (nextTop+TILE_SIZE*5)-8, TILE_SIZE * 4 + 16, TILE_SIZE * 11 + 16)
 
-    love.graphics.setColor(196, 196, 196, 196)
+    setColorF(196, 196, 196, 196)
     love.graphics.rectangle("line", nextLeft-8, (nextTop+TILE_SIZE*5)-8, TILE_SIZE * 4 + 16, TILE_SIZE * 11 + 16)
     
     -- draw timer
@@ -196,17 +201,17 @@ local function drawBoard(board, rows, cols)
                         val = val - 7
                     end
     
-                    love.graphics.setColor(255, 255, 255, alpha)
+                    setColorF(255, 255, 255, alpha)
                     love.graphics.draw(Tetris.imgs[val], x, y, 0, 0.5)
                 end
             end
         end 
 
-        love.graphics.setColor(256, 256, 256, 256)
+        setColorF(256, 256, 256, 256)
         love.graphics.setFont(timerFont)
 
         if timer < 30 then
-            love.graphics.setColor(256, 32, 32, 256)
+            setColorF(256, 32, 32, 256)
         end
         local timerLeft = nextLeft + 12
         local timerTop = nextTop + TILE_SIZE * 5.6
@@ -219,9 +224,9 @@ local function drawBoard(board, rows, cols)
         love.graphics.print(timerText, timerLeft, timerTop + 48)
 
         if startingTall > currentTall then
-            love.graphics.setColor(32, 256, 64, 256)
+            setColorF(32, 256, 64, 256)
         else
-            love.graphics.setColor(256, 256, 256, 256)
+            setColorF(256, 256, 256, 256)
         end
         tallText = tostring(currentTall)
         while #tallText < 4 do
@@ -231,7 +236,7 @@ local function drawBoard(board, rows, cols)
         love.graphics.print("junk", timerLeft, timerTop + 112)
         love.graphics.print(tallText, timerLeft, timerTop + 112 + 48)
 
-        love.graphics.setColor(256, 256, 256, 256)
+        setColorF(256, 256, 256, 256)
         tookText = tostring(tookLines)
         while #tookText < 4 do
             tookText = "0" .. tookText
@@ -242,10 +247,10 @@ local function drawBoard(board, rows, cols)
     end
 
     if ControlState == ControlStates.INTRO then
-        love.graphics.setColor(0, 0, 0, 196)
+        setColorF(0, 0, 0, 196)
         love.graphics.rectangle("fill", 0, 0, WIN_WIDTH, WIN_HEIGHT)
 
-        love.graphics.setColor(256, 256, 256, 256)
+        setColorF(256, 256, 256, 256)
         love.graphics.setFont(chatFont)
 
         love.graphics.print(intro.currentTextRender or "", TILE_SIZE * 3, TILE_SIZE * 7)
@@ -257,10 +262,10 @@ local function drawBoard(board, rows, cols)
 
     if ControlState == ControlStates.OUTRO then
         
-        love.graphics.setColor(0, 0, 0, 196)
+        setColorF(0, 0, 0, 196)
         love.graphics.rectangle("fill", 0, 0, WIN_WIDTH, WIN_HEIGHT)
 
-        love.graphics.setColor(256, 256, 256, 256)
+        setColorF(256, 256, 256, 256)
         love.graphics.setFont(chatFont)
 
         if outroRunner == -1 then
@@ -348,10 +353,10 @@ local function wallKick(row, col, oldSpin, newSpin, piece)
     end
 
     local key = tostring(oldSpin) .. tostring(newSpin)
-    print(key)
+    -- print(key)
     local kickMap = Tetris.wallKick[key]
     
-    print(#kickMap)
+    -- print(#kickMap)
     for k=1,#kickMap do
         local kr = -kickMap[k][2]
         local kc = kickMap[k][1]
@@ -433,7 +438,7 @@ function love.load()
 
     love.keyboard.setKeyRepeat(false)
     love.graphics.setDefaultFilter("nearest", "nearest", 1)
-    love.graphics.setBackgroundColor(38, 38, 38, 255)
+    love.graphics.setBackgroundColor(38 / 255.0, 38 / 255.0, 38 / 255.0)
     love.graphics.setLineWidth(4)
 
     timerFont = love.graphics.newFont("fonts/coders_crux.ttf", 72)
@@ -474,13 +479,13 @@ function love.load()
     local bn, lm, nm, bd = Net.getBoard()
     if bn ~= -1 then
         returnBoardNumber = bn
-        print(returnBoardNumber)
+        -- print(returnBoardNumber)
         returnName = nm
         returnTimestamp = lm
         loadedBoard = bd
     end
 
-    print(bd)
+    -- print(bd)
 
     isAwesome = Save.isAwesome()
     if isAwesome then
@@ -941,7 +946,7 @@ function love.update(dt)
 
             groundTimer = 0
             ControlState = ControlStates.GROUND
-            print("HIT GROUND")
+            -- print("HIT GROUND")
         end
 
         currentPieceRow = currentPieceRowNext
@@ -949,7 +954,7 @@ function love.update(dt)
         currentPieceSpin = currentPieceSpinNext
         
         if shouldScrollDown() then 
-            print("SCROLLIN")
+            -- print("SCROLLIN")
             ControlState = ControlStates.SCROLL_DOWN
         end
     elseif ControlState == ControlStates.SCROLL_DOWN then
@@ -1045,7 +1050,7 @@ function love.update(dt)
             _, board = coroutine.resume(currentCollapser, board)
         end
     elseif ControlState == ControlStates.GROW then
-        print("GROW")
+        -- print("GROW")
         if currentGrower == nil then
             currentGrower = coroutine.create(grower)
         end
