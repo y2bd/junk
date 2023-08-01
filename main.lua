@@ -396,7 +396,12 @@ function love.keypressed(key, scan, isrepeat)
     if ControlState == ControlStates.INTRO or
        ControlState == ControlStates.SPAWN or
        ControlState == ControlStates.FALL or
-       ControlState == ControlStates.GROUND then
+       ControlState == ControlStates.GROUND or
+       ControlState == ControlStates.COLLAPSE or
+       ControlState == ControlStates.GROW or
+       ControlState == ControlStates.SHRINK or
+       ControlState == ControlStates.SCROLL_UP or
+       ControlState == ControlStates.SCROLL_DOWN then
 
         Input.keyPressed(key, scan, isrepeat)
     end
