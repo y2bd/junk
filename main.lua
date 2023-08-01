@@ -698,9 +698,9 @@ local boardLoader = function(args)
 
         
         if drewAnything then
-            del = 6
+            del = 4
             if isAwesome then
-                del = 3
+                del = 2
             end
 
             for delay=1,del do

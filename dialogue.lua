@@ -77,7 +77,7 @@ Dialogue.speak = function(args)
     local maxLine = args[2]
     local base = args[3]
 
-    for delay=1,14 do
+    for delay=1,10 do
         args = coroutine.yield({ text, maxLine, base })
         base = args[3]
     end
@@ -89,7 +89,7 @@ Dialogue.speak = function(args)
         local val = string.sub(text, textIndex, textIndex)
         base = base .. string.sub(text, textIndex, textIndex)
 
-        for delay=1,3 do
+        for delay=1,2 do
             args = coroutine.yield({ text, maxLine, base })
             base = args[3]
         end
