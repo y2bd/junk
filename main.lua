@@ -26,26 +26,23 @@ local GAME_TIME = 121
 
 local MAX_LINE = 24
 
-
-
 local ControlStates = {
-    LOAD_BOARD={},
-    SAVE_BOARD={},
-    DONE={},
+    LOAD_BOARD = {},
+    SAVE_BOARD = {},
+    DONE = {},
 
-    INTRO={},
-    OUTRO={},
+    INTRO = {},
+    OUTRO = {},
 
-    SPAWN={},
-    FALL={},
-    GROUND={},
-    COMPLETE={},
-    COLLAPSE={},
-    GROW={},
-    SHRINK={},
-    SCROLL_DOWN={},
-    SCROLL_UP={},
-
+    SPAWN = {},
+    FALL = {},
+    GROUND = {},
+    COMPLETE = {},
+    COLLAPSE = {},
+    GROW = {},
+    SHRINK = {},
+    SCROLL_DOWN = {},
+    SCROLL_UP = {}
 
 }
 
@@ -59,17 +56,17 @@ end
 -- fix
 _coroutine_resume = coroutine.resume
 function coroutine.resume(...)
-	local state,result = _coroutine_resume(...)
-	if not state then
-		error( tostring(result), 2 )	-- Output error message
-	end
-	return state,result
+    local state, result = _coroutine_resume(...)
+    if not state then
+        error(tostring(result), 2) -- Output error message
+    end
+    return state, result
 end
 
 -- goddamn hoisting
 local function getNumberOfLines()
-    for i=1,currentRows do
-        for j=1,COLS do
+    for i = 1, currentRows do
+        for j = 1, COLS do
             if board[i * COLS + j] ~= 0 then
                 return currentRows - i + 1
             end
@@ -86,21 +83,21 @@ local function saveBoard(board, rows, cols)
         if ControlState == ControlStates.FALL then
             local canv = love.graphics.newCanvas(cols * TILE_SIZE, rows * TILE_SIZE)
             love.graphics.setCanvas(canv)
-                for i=1,rows do
-                    for j=1,cols do
-                        local val = board[i * cols + j]
-                        local x = 0 + (j-1) * TILE_SIZE
-                        local y = 0 + (i-1) * TILE_SIZE
-            
-                        if val ~= 0 and val ~= nil and val <= 7 then
-                            local alpha = 255
-                            -- setColorF(Tetris.colors[val][1], Tetris.colors[val][2], Tetris.colors[val][3], alpha)
-                            setColorF(255, 255, 255, alpha)
-                            love.graphics.draw(Tetris.imgs[val], x, y, 0, 0.5)
-                            -- love.graphics.rectangle("fill", x, y, TILE_SIZE, TILE_SIZE)
-                        end
+            for i = 1, rows do
+                for j = 1, cols do
+                    local val = board[i * cols + j]
+                    local x = 0 + (j - 1) * TILE_SIZE
+                    local y = 0 + (i - 1) * TILE_SIZE
+
+                    if val ~= 0 and val ~= nil and val <= 7 then
+                        local alpha = 255
+                        -- setColorF(Tetris.colors[val][1], Tetris.colors[val][2], Tetris.colors[val][3], alpha)
+                        setColorF(255, 255, 255, alpha)
+                        love.graphics.draw(Tetris.imgs[val], x, y, 0, 0.5)
+                        -- love.graphics.rectangle("fill", x, y, TILE_SIZE, TILE_SIZE)
                     end
                 end
+            end
             love.graphics.setCanvas()
 
             local id = canv:newImageData()
@@ -121,16 +118,16 @@ local function drawBoard(board, rows, cols)
     local top = TILE_SIZE * 2
 
     setColorF(16, 16, 16, 256)
-    love.graphics.rectangle("fill", left-8, top-8, TILE_SIZE * COLS + 16, TILE_SIZE * MIN_ROWS + 16)
+    love.graphics.rectangle("fill", left - 8, top - 8, TILE_SIZE * COLS + 16, TILE_SIZE * MIN_ROWS + 16)
 
     setColorF(196, 196, 196, 196)
-    love.graphics.rectangle("line", left-8, top-8, TILE_SIZE * COLS + 16, TILE_SIZE * MIN_ROWS + 16)
+    love.graphics.rectangle("line", left - 8, top - 8, TILE_SIZE * COLS + 16, TILE_SIZE * MIN_ROWS + 16)
 
-    for i=1,math.min(rows,MIN_ROWS) do
-        for j=1,cols do
+    for i = 1, math.min(rows, MIN_ROWS) do
+        for j = 1, cols do
             local val = board[(i + viewportDelta) * cols + j]
-            local x = left + (j-1) * TILE_SIZE
-            local y = top + (i-1) * TILE_SIZE
+            local x = left + (j - 1) * TILE_SIZE
+            local y = top + (i - 1) * TILE_SIZE
 
             if val ~= 0 and val ~= nil then
                 local alpha = 255
@@ -156,7 +153,8 @@ local function drawBoard(board, rows, cols)
             love.graphics.print("JUNK", left + TILE_SIZE * COLS / 2 - 60, top + TILE_SIZE * 3)
 
             love.graphics.setFont(chatFont)
-            love.graphics.printf("a board by\n" .. returnName, left + TILE_SIZE * COLS / 2 - 60, top + TILE_SIZE * 4.2, 140)
+            love.graphics.printf("a board by\n" .. returnName, left + TILE_SIZE * COLS / 2 - 60, top + TILE_SIZE * 4.2,
+                140)
         else
             love.graphics.setFont(timerFont)
             love.graphics.print("JUNK", left + TILE_SIZE * COLS / 2 - 60, top + TILE_SIZE * 3)
@@ -171,41 +169,43 @@ local function drawBoard(board, rows, cols)
     local nextTop = top
 
     setColorF(16, 16, 16, 256)
-    love.graphics.rectangle("fill", nextLeft-8, nextTop-8, TILE_SIZE * 4 + 16, TILE_SIZE * 4 + 16)
+    love.graphics.rectangle("fill", nextLeft - 8, nextTop - 8, TILE_SIZE * 4 + 16, TILE_SIZE * 4 + 16)
 
     setColorF(196, 196, 196, 196)
-    love.graphics.rectangle("line", nextLeft-8, nextTop-8, TILE_SIZE * 4 + 16, TILE_SIZE * 4 + 16)
+    love.graphics.rectangle("line", nextLeft - 8, nextTop - 8, TILE_SIZE * 4 + 16, TILE_SIZE * 4 + 16)
 
     setColorF(16, 16, 16, 256)
-    love.graphics.rectangle("fill", nextLeft-8, (nextTop+TILE_SIZE*5)-8, TILE_SIZE * 4 + 16, TILE_SIZE * 11 + 16)
+    love.graphics
+        .rectangle("fill", nextLeft - 8, (nextTop + TILE_SIZE * 5) - 8, TILE_SIZE * 4 + 16, TILE_SIZE * 11 + 16)
 
     setColorF(196, 196, 196, 196)
-    love.graphics.rectangle("line", nextLeft-8, (nextTop+TILE_SIZE*5)-8, TILE_SIZE * 4 + 16, TILE_SIZE * 11 + 16)
-    
+    love.graphics
+        .rectangle("line", nextLeft - 8, (nextTop + TILE_SIZE * 5) - 8, TILE_SIZE * 4 + 16, TILE_SIZE * 11 + 16)
+
     -- draw timer
     if timerActive or ControlState == ControlStates.OUTRO then
-        for i=1,Tetris.sizes[nextPiece][1] do
-            for j=1,Tetris.sizes[nextPiece][2] do
+        for i = 1, Tetris.sizes[nextPiece][1] do
+            for j = 1, Tetris.sizes[nextPiece][2] do
                 local val = Tetris.pieces[nextPiece][i * Tetris.sizes[nextPiece][2] + j]
-                local x = nextLeft + (j-1) * TILE_SIZE + (4 - Tetris.sizes[nextPiece][1]) * 0.5 * TILE_SIZE
-                local y = nextTop + (i-1) * TILE_SIZE + (4 - Tetris.sizes[nextPiece][2]) * 1 * TILE_SIZE
-    
+                local x = nextLeft + (j - 1) * TILE_SIZE + (4 - Tetris.sizes[nextPiece][1]) * 0.5 * TILE_SIZE
+                local y = nextTop + (i - 1) * TILE_SIZE + (4 - Tetris.sizes[nextPiece][2]) * 1 * TILE_SIZE
+
                 if nextPiece == 1 then
                     y = y + TILE_SIZE / 2
                 end
-    
+
                 if val ~= 0 and val ~= nil then
                     local alpha = 255
                     if val > 7 then
                         alpha = 128
                         val = val - 7
                     end
-    
+
                     setColorF(255, 255, 255, alpha)
                     love.graphics.draw(Tetris.imgs[val], x, y, 0, 0.5)
                 end
             end
-        end 
+        end
 
         setColorF(256, 256, 256, 256)
         love.graphics.setFont(timerFont)
@@ -268,7 +268,7 @@ local function drawBoard(board, rows, cols)
     end
 
     if ControlState == ControlStates.OUTRO then
-        
+
         setColorF(0, 0, 0, 196)
         love.graphics.rectangle("fill", 0, 0, WIN_WIDTH, WIN_HEIGHT)
 
@@ -314,11 +314,14 @@ local function getCurrentPiece(spin)
     if spin == 1 then
         return Tetris.pieces[currentPiece]
     elseif spin == 2 then
-        return Matrix.rotate90CC(Tetris.pieces[currentPiece], Tetris.sizes[currentPiece][1], Tetris.sizes[currentPiece][2])
+        return Matrix.rotate90CC(Tetris.pieces[currentPiece], Tetris.sizes[currentPiece][1],
+            Tetris.sizes[currentPiece][2])
     elseif spin == 3 then
-        return Matrix.rotate180(Tetris.pieces[currentPiece], Tetris.sizes[currentPiece][1], Tetris.sizes[currentPiece][2])
+        return Matrix.rotate180(Tetris.pieces[currentPiece], Tetris.sizes[currentPiece][1],
+            Tetris.sizes[currentPiece][2])
     elseif spin == 4 then
-        return Matrix.rotate90C(Tetris.pieces[currentPiece], Tetris.sizes[currentPiece][1], Tetris.sizes[currentPiece][2])
+        return Matrix.rotate90C(Tetris.pieces[currentPiece], Tetris.sizes[currentPiece][1],
+            Tetris.sizes[currentPiece][2])
     end
 end
 
@@ -333,19 +336,20 @@ local function rotate(spin, dir)
     return spin
 end
 
-local function collides(checkRow, checkCol, checkSpin) 
-    return Matrix.collides(board, currentRows, COLS, getCurrentPiece(checkSpin), Tetris.sizes[currentPiece][1], Tetris.sizes[currentPiece][2], checkRow, checkCol)
+local function collides(checkRow, checkCol, checkSpin)
+    return Matrix.collides(board, currentRows, COLS, getCurrentPiece(checkSpin), Tetris.sizes[currentPiece][1],
+        Tetris.sizes[currentPiece][2], checkRow, checkCol)
 end
 
 local function beamKick(row, col, oldSpin, newSpin)
     local key = tostring(oldSpin) .. tostring(newSpin)
     local kickMap = Tetris.beamKick[key]
 
-    for k=1,#kickMap do
+    for k = 1, #kickMap do
         local kr = -kickMap[k][2]
         local kc = kickMap[k][1]
-        if not collides(row+kr, col+kc, newSpin) then
-            return row+kr, col+kc, newSpin
+        if not collides(row + kr, col + kc, newSpin) then
+            return row + kr, col + kc, newSpin
         end
     end
 
@@ -362,13 +366,13 @@ local function wallKick(row, col, oldSpin, newSpin, piece)
     local key = tostring(oldSpin) .. tostring(newSpin)
     -- print(key)
     local kickMap = Tetris.wallKick[key]
-    
+
     -- print(#kickMap)
-    for k=1,#kickMap do
+    for k = 1, #kickMap do
         local kr = -kickMap[k][2]
         local kc = kickMap[k][1]
-        if not collides(row+kr, col+kc, newSpin) then
-            return row+kr, col+kc, newSpin
+        if not collides(row + kr, col + kc, newSpin) then
+            return row + kr, col + kc, newSpin
         end
     end
 
@@ -405,16 +409,10 @@ function love.keypressed(key, scan, isrepeat)
         end
     end
 
-    if ControlState == ControlStates.INTRO or
-       ControlState == ControlStates.LOAD_BOARD or
-       ControlState == ControlStates.SPAWN or
-       ControlState == ControlStates.FALL or
-       ControlState == ControlStates.GROUND or
-       ControlState == ControlStates.COLLAPSE or
-       ControlState == ControlStates.GROW or
-       ControlState == ControlStates.SHRINK or
-       ControlState == ControlStates.SCROLL_UP or
-       ControlState == ControlStates.SCROLL_DOWN then
+    if ControlState == ControlStates.INTRO or ControlState == ControlStates.LOAD_BOARD or ControlState ==
+        ControlStates.SPAWN or ControlState == ControlStates.FALL or ControlState == ControlStates.GROUND or
+        ControlState == ControlStates.COLLAPSE or ControlState == ControlStates.GROW or ControlState ==
+        ControlStates.SHRINK or ControlState == ControlStates.SCROLL_UP or ControlState == ControlStates.SCROLL_DOWN then
 
         Input.keyPressed(key, scan, isrepeat)
     end
@@ -430,7 +428,7 @@ function love.textinput(text)
             return
         end
 
-        if Input.TYPING_KEYS[text] then 
+        if Input.TYPING_KEYS[text] then
             outro.username = outro.username .. text
         end
 
@@ -442,7 +440,7 @@ end
 
 function love.load()
     print("Starting the game ...")
-    math.randomseed( os.time() )
+    math.randomseed(os.time())
 
     love.keyboard.setKeyRepeat(false)
     love.graphics.setDefaultFilter("nearest", "nearest", 1)
@@ -453,7 +451,7 @@ function love.load()
     chatFont = love.graphics.newFont("fonts/coders_crux.ttf", 36)
 
     WIN_WIDTH, WIN_HEIGHT = love.window.getMode()
-    TILE_SIZE = ((WIN_WIDTH + WIN_HEIGHT) / 4) / COLS;  
+    TILE_SIZE = ((WIN_WIDTH + WIN_HEIGHT) / 4) / COLS;
 
     currentBag = shuffle({1, 2, 3, 4, 5, 6, 7})
     nextBag = shuffle({1, 2, 3, 4, 5, 6, 7})
@@ -471,18 +469,20 @@ function love.load()
 
     intro = {
         currentLine = 1,
-        currentTextRender = "",
+        currentTextRender = ""
     }
 
     outro = {
         currentLine = 1,
-        currentTextRender= "",
+        currentTextRender = "",
         rank = Dialogue.outroLazy,
-        username = "",
+        username = ""
     }
 
     timerActive = false
     timer = GAME_TIME
+
+    Input.initialize()
 
     local bn, lm, nm, bd = Net.getBoard()
     if bn ~= -1 then
@@ -504,15 +504,15 @@ function love.load()
     board = Matrix.create(currentRows, COLS, 0)
 end
 
-local collapser = function (board)
+local collapser = function(board)
     local needToCollapse = false
     local bottomRow = nil
 
     topRow = nil
-    for i=1,currentRows do
+    for i = 1, currentRows do
         local fullRow = true
         local emptyRow = false
-        for j=1,COLS do
+        for j = 1, COLS do
             if board[i * COLS + j] == 0 then
                 fullRow = false
             end
@@ -529,14 +529,14 @@ local collapser = function (board)
     end
 
     if needToCollapse then
-        for delay=1,5 do
+        for delay = 1, 5 do
             board = coroutine.yield(board)
         end
     end
 
-    for i=1,currentRows do
+    for i = 1, currentRows do
         local fullRow = true
-        for j=1,COLS do
+        for j = 1, COLS do
             if board[i * COLS + j] == 0 then
                 fullRow = false
             end
@@ -547,7 +547,7 @@ local collapser = function (board)
                 bottomRow = i
             end
 
-            for j=1,COLS do
+            for j = 1, COLS do
                 table.remove(board, i * COLS + j)
                 table.insert(board, 1 * COLS + 1, 0)
             end
@@ -557,7 +557,7 @@ local collapser = function (board)
     end
 
     if needToCollapse then
-        for delay=1,5 do
+        for delay = 1, 5 do
             board = coroutine.yield(board)
         end
     end
@@ -565,10 +565,10 @@ local collapser = function (board)
     return board
 end
 
-local grower = function (board) 
+local grower = function(board)
     local topRow = currentRows
-    for i=1,currentRows do
-        for j=1,COLS do
+    for i = 1, currentRows do
+        for j = 1, COLS do
             if board[i * COLS + j] ~= 0 then
                 topRow = i
                 break
@@ -580,8 +580,8 @@ local grower = function (board)
     end
 
     if topRow <= GROW_BUFFER then
-        for i=1,ROW_GROWTH do
-            for j=1,COLS do
+        for i = 1, ROW_GROWTH do
+            for j = 1, COLS do
                 table.insert(board, 1 * COLS + 1, 0)
             end
             board = coroutine.yield(board)
@@ -592,14 +592,14 @@ local grower = function (board)
     return board
 end
 
-local shrinker = function (board)
+local shrinker = function(board)
     if currentRows <= MIN_ROWS then
         return board
     end
 
     local topRow = currentRows
-    for i=1,currentRows do
-        for j=1,COLS do
+    for i = 1, currentRows do
+        for j = 1, COLS do
             if board[i * COLS + j] ~= 0 then
                 topRow = i
                 break
@@ -611,8 +611,8 @@ local shrinker = function (board)
     end
 
     if topRow >= SHRINK_BUFFER then
-        for i=1,ROW_SHRINK do
-            for j=1,COLS do
+        for i = 1, ROW_SHRINK do
+            for j = 1, COLS do
                 table.remove(board, 1 * COLS + 1)
             end
             board = coroutine.yield(board)
@@ -623,7 +623,7 @@ local shrinker = function (board)
     return board
 end
 
-function shouldScrollDown ()
+function shouldScrollDown()
     if currentRows <= MIN_ROWS then
         return false
     end
@@ -639,7 +639,7 @@ function shouldScrollDown ()
     return false
 end
 
-local scrollDown = function ()
+local scrollDown = function()
     if currentRows <= MIN_ROWS then
         return
     end
@@ -665,13 +665,13 @@ local scrollDown = function ()
     end
 
     if shouldScroll then
-        for delay=1,20 do
+        for delay = 1, 20 do
             coroutine.yield()
         end
     end
 end
 
-local scrollUp = function ()
+local scrollUp = function()
     if currentRows <= MIN_ROWS then
         return
     end
@@ -686,14 +686,14 @@ local scrollUp = function ()
     viewportDelta = 0
 
     if shouldScroll then
-        for delay=1,15 do
+        for delay = 1, 15 do
             coroutine.yield()
         end
     end
 end
 
 local boardLoader = function(args)
-    for delay=1,25 do
+    for delay = 1, 25 do
         args = coroutine.yield({board, boardStr})
     end
 
@@ -706,14 +706,16 @@ local boardLoader = function(args)
     currentRows = insertRows
 
     local drewAnything = false
-    for i=insertRows,1,-1 do
+    for i = insertRows, 1, -1 do
         if Input.pollInput("escape") then
             hyperspeed = true
         end
 
-        for j=COLS,1,-1 do
+        for j = COLS, 1, -1 do
             board[i * COLS + j] = tonumber(string.sub(boardStr, boardStrIndex, boardStrIndex))
-            if board[i * COLS + j] ~= 0 then drewAnything = true end
+            if board[i * COLS + j] ~= 0 then
+                drewAnything = true
+            end
 
             boardStrIndex = boardStrIndex - 1
         end
@@ -728,7 +730,7 @@ local boardLoader = function(args)
             -- rather than delaying per row
             hyperspeedModulo = math.max(3, math.floor(insertRows / 20))
             if (not hyperspeed) or (i % hyperspeedModulo == 0) then
-                for delay=1,del do
+                for delay = 1, del do
                     args = coroutine.yield({board, boardStr})
                 end
             end
@@ -747,13 +749,13 @@ local boardLoader = function(args)
     if isAwesome then
         boardLen = 90
     end
-    
+
     love.window.setTitle('Junk (for LD40, board by ' .. returnName .. ')')
-    for delay=1,boardLen do
+    for delay = 1, boardLen do
         args = coroutine.yield({board, boardStr})
     end
     showTitle = false
-    for delay=1,15 do
+    for delay = 1, 15 do
         args = coroutine.yield({board, boardStr})
     end
 
@@ -762,7 +764,6 @@ end
 
 function love.update(dt)
     if ControlState == ControlStates.INTRO then
-        
 
         if introRunner == nil then
             introRunner = coroutine.create(Dialogue.speak)
@@ -779,9 +780,12 @@ function love.update(dt)
             end
         else
             if intro.currentLine == Dialogue.nameLine then
-                _, args = coroutine.resume(introRunner, { Dialogue.lines[intro.currentLine] .. "..." .. returnName .. "?                     ", MAX_LINE, intro.currentTextRender })
+                _, args = coroutine.resume(introRunner,
+                    {Dialogue.lines[intro.currentLine] .. "..." .. returnName .. "?                     ", MAX_LINE,
+                     intro.currentTextRender})
             else
-                _, args = coroutine.resume(introRunner, { Dialogue.lines[intro.currentLine], MAX_LINE, intro.currentTextRender })
+                _, args = coroutine.resume(introRunner,
+                    {Dialogue.lines[intro.currentLine], MAX_LINE, intro.currentTextRender})
             end
 
             intro.currentTextRender = args[3]
@@ -806,7 +810,7 @@ function love.update(dt)
                 outroRunner = -1
             end
         elseif outroRunner ~= -1 then
-            _, args = coroutine.resume(outroRunner, { outro.rank[outro.currentLine], MAX_LINE, outro.currentTextRender })
+            _, args = coroutine.resume(outroRunner, {outro.rank[outro.currentLine], MAX_LINE, outro.currentTextRender})
             outro.currentTextRender = args[3]
         end
     elseif ControlState == ControlStates.LOAD_BOARD then
@@ -819,8 +823,8 @@ function love.update(dt)
             ControlState = ControlStates.SPAWN
             currentBoardLoader = nil
         else
-            _, res = coroutine.resume(currentBoardLoader, { board, loadedBoard })
-            
+            _, res = coroutine.resume(currentBoardLoader, {board, loadedBoard})
+
             return
         end
     elseif ControlState == ControlStates.SAVE_BOARD then
@@ -840,7 +844,7 @@ function love.update(dt)
         return
     elseif ControlState == ControlStates.DONE then
         if pleaseRestart then
-            love.event.quit( "restart" )
+            love.event.quit("restart")
         else
             love.event.quit()
         end
@@ -848,13 +852,13 @@ function love.update(dt)
 
     if currentBagIndex > #currentBag then
         currentBag = nextBag
-        nextBag = shuffle({1,2,3,4,5,6,7})
+        nextBag = shuffle({1, 2, 3, 4, 5, 6, 7})
         currentBagIndex = 1
     end
 
     if timerActive then
         timer = timer - dt
-        
+
         if timer <= 0 then
             ControlState = ControlStates.OUTRO
             timer = 0
@@ -918,7 +922,8 @@ function love.update(dt)
 
         -- wall kick
         if currentPieceSpinNext ~= currentPieceSpin then
-            currentPieceRowNext, currentPieceColNext, currentPieceSpinNext = wallKick(currentPieceRowNext, currentPieceColNext, currentPieceSpin, currentPieceSpinNext, currentPiece)
+            currentPieceRowNext, currentPieceColNext, currentPieceSpinNext = wallKick(currentPieceRowNext,
+                currentPieceColNext, currentPieceSpin, currentPieceSpinNext, currentPiece)
         end
 
         if Input.pollInput("left") then
@@ -926,8 +931,8 @@ function love.update(dt)
                 currentPieceColNext = currentPieceColNext - 1
             end
         end
-        
-        if Input.pollInput("right") then 
+
+        if Input.pollInput("right") then
             if not collides(currentPieceRowNext, currentPieceColNext + 1, currentPieceSpinNext) then
                 currentPieceColNext = currentPieceColNext + 1
             end
@@ -937,12 +942,12 @@ function love.update(dt)
             currentPieceRowNext = getSlamRow(currentPieceColNext, currentPieceRowNext, currentPieceSpinNext)
 
             groundTimer = 0
-            ControlState = ControlStates.COMPLETE 
-            
+            ControlState = ControlStates.COMPLETE
+
             currentPieceRow = currentPieceRowNext
             currentPieceCol = currentPieceColNext
             currentPieceSpin = currentPieceSpinNext
-            
+
             Input.updatePost(dt)
             return
         end
@@ -958,9 +963,9 @@ function love.update(dt)
             fallTimer = fallTimer - FALL_ELAPSE
             currentPieceRowNext = currentPieceRowNext + 1
         end
-        
+
         -- ground collision
-        if collides(currentPieceRowNext, currentPieceColNext, currentPieceSpinNext) then 
+        if collides(currentPieceRowNext, currentPieceColNext, currentPieceSpinNext) then
             currentPieceRowNext = CPRNpreFall
 
             groundTimer = 0
@@ -971,8 +976,8 @@ function love.update(dt)
         currentPieceRow = currentPieceRowNext
         currentPieceCol = currentPieceColNext
         currentPieceSpin = currentPieceSpinNext
-        
-        if shouldScrollDown() then 
+
+        if shouldScrollDown() then
             -- print("SCROLLIN")
             ControlState = ControlStates.SCROLL_DOWN
         end
@@ -993,7 +998,7 @@ function love.update(dt)
         local currentPieceRowNext = currentPieceRow
         local currentPieceColNext = currentPieceCol
         local currentPieceSpinNext = currentPieceSpin
-        
+
         if Input.pollInput("z") then
             currentPieceSpinNext = rotate(currentPieceSpinNext, -1)
         end
@@ -1004,7 +1009,8 @@ function love.update(dt)
 
         -- wall kick
         if currentPieceSpinNext ~= currentPieceSpin then
-            currentPieceRowNext, currentPieceColNext, currentPieceSpinNext = wallKick(currentPieceRowNext, currentPieceColNext, currentPieceSpin, currentPieceSpinNext, currentPiece)
+            currentPieceRowNext, currentPieceColNext, currentPieceSpinNext = wallKick(currentPieceRowNext,
+                currentPieceColNext, currentPieceSpin, currentPieceSpinNext, currentPiece)
             if currentPieceSpin ~= currentPieceSpinNext then
                 groundTimer = -GROUND_ELAPSE
             end
@@ -1017,15 +1023,15 @@ function love.update(dt)
                 groundTimer = -GROUND_ELAPSE
             end
         end
-        
-        if Input.pollInput("right") then 
+
+        if Input.pollInput("right") then
             if not collides(currentPieceRowNext, currentPieceColNext + 1, currentPieceSpinNext) then
                 currentPieceColNext = currentPieceColNext + 1
                 groundTimer = -GROUND_ELAPSE
             end
         end
 
-        if Input.pollInput("up") then 
+        if Input.pollInput("up") then
             -- you can lock in pieces that are grounded by hard-dropping
             groundTimer = GROUND_ELAPSE
         end
@@ -1034,12 +1040,12 @@ function love.update(dt)
         if not collides(currentPieceRowNext + 1, currentPieceColNext, currentPieceSpinNext) then
             fallTimer = 0
             groundTimer = 0
-            
+
             currentPieceRow = currentPieceRowNext
             currentPieceCol = currentPieceColNext
             currentPieceSpin = currentPieceSpinNext
             ControlState = ControlStates.FALL
-            
+
             Input.updatePost(dt)
             return
         end
@@ -1049,12 +1055,13 @@ function love.update(dt)
             groundTimer = 0
             ControlState = ControlStates.COMPLETE
         end
-        
+
         currentPieceRow = currentPieceRowNext
         currentPieceCol = currentPieceColNext
         currentPieceSpin = currentPieceSpinNext
     elseif ControlState == ControlStates.COMPLETE then
-        board = Matrix.applyInto(board, currentRows, COLS, getCurrentPiece(currentPieceSpin), Tetris.sizes[currentPiece][1], Tetris.sizes[currentPiece][2], currentPieceRow, currentPieceCol)
+        board = Matrix.applyInto(board, currentRows, COLS, getCurrentPiece(currentPieceSpin),
+            Tetris.sizes[currentPiece][1], Tetris.sizes[currentPiece][2], currentPieceRow, currentPieceCol)
         ControlState = ControlStates.COLLAPSE
     elseif ControlState == ControlStates.COLLAPSE then
         if currentCollapser == nil then
@@ -1113,16 +1120,17 @@ function love.draw()
     local boardWithGhost = board
     if ControlState == ControlStates.FALL or ControlState == ControlStates.SCROLL_DOWN then
         local ghostRow = getSlamRow(currentPieceCol, currentPieceRow, currentPieceSpin)
-        local ghostPiece = Matrix.ghostify(getCurrentPiece(currentPieceSpin), Tetris.sizes[currentPiece][1], Tetris.sizes[currentPiece][2])
-        boardWithGhost = Matrix.applyInto(board, currentRows, COLS, ghostPiece, Tetris.sizes[currentPiece][1], Tetris.sizes[currentPiece][2], ghostRow, currentPieceCol)
+        local ghostPiece = Matrix.ghostify(getCurrentPiece(currentPieceSpin), Tetris.sizes[currentPiece][1],
+            Tetris.sizes[currentPiece][2])
+        boardWithGhost = Matrix.applyInto(board, currentRows, COLS, ghostPiece, Tetris.sizes[currentPiece][1],
+            Tetris.sizes[currentPiece][2], ghostRow, currentPieceCol)
     end
 
     local currentBoard = boardWithGhost
-    if ControlState == ControlStates.FALL or 
-       ControlState == ControlStates.GROUND or 
-       ControlState == ControlStates.SCROLL_DOWN or 
-       ControlState == ControlStates.COMPLETE then
-        currentBoard = Matrix.applyInto(boardWithGhost, currentRows, COLS, getCurrentPiece(currentPieceSpin), Tetris.sizes[currentPiece][1], Tetris.sizes[currentPiece][2], currentPieceRow, currentPieceCol)
+    if ControlState == ControlStates.FALL or ControlState == ControlStates.GROUND or ControlState ==
+        ControlStates.SCROLL_DOWN or ControlState == ControlStates.COMPLETE then
+        currentBoard = Matrix.applyInto(boardWithGhost, currentRows, COLS, getCurrentPiece(currentPieceSpin),
+            Tetris.sizes[currentPiece][1], Tetris.sizes[currentPiece][2], currentPieceRow, currentPieceCol)
     end
 
     -- Matrix.print(currentBoard, currentRows, COLS)
