@@ -260,6 +260,13 @@ local function drawBoard(board, rows, cols)
         end
     end
 
+    if ControlState == ControlStates.LOAD_BOARD then
+        if isAwesome and not hyperspeed then
+            setColorF(256, 256, 256, 256)
+            love.graphics.print("(press esc to speed)", TILE_SIZE * 3 - 12, TILE_SIZE * 17)
+        end
+    end
+
     if ControlState == ControlStates.OUTRO then
         
         setColorF(0, 0, 0, 196)
@@ -399,6 +406,7 @@ function love.keypressed(key, scan, isrepeat)
     end
 
     if ControlState == ControlStates.INTRO or
+       ControlState == ControlStates.LOAD_BOARD or
        ControlState == ControlStates.SPAWN or
        ControlState == ControlStates.FALL or
        ControlState == ControlStates.GROUND or
@@ -699,6 +707,10 @@ local boardLoader = function(args)
 
     local drewAnything = false
     for i=insertRows,1,-1 do
+        if Input.pollInput("escape") then
+            hyperspeed = true
+        end
+
         for j=COLS,1,-1 do
             board[i * COLS + j] = tonumber(string.sub(boardStr, boardStrIndex, boardStrIndex))
             if board[i * COLS + j] ~= 0 then drewAnything = true end
@@ -706,15 +718,19 @@ local boardLoader = function(args)
             boardStrIndex = boardStrIndex - 1
         end
 
-        
         if drewAnything then
             del = 4
             if isAwesome then
                 del = 2
             end
 
-            for delay=1,del do
-                args = coroutine.yield({board, boardStr})
+            -- if we're in hyperspeed, we let some full rows get drawn before delaying
+            -- rather than delaying per row
+            hyperspeedModulo = math.max(3, math.floor(insertRows / 20))
+            if (not hyperspeed) or (i % hyperspeedModulo == 0) then
+                for delay=1,del do
+                    args = coroutine.yield({board, boardStr})
+                end
             end
         end
 
@@ -725,10 +741,14 @@ local boardLoader = function(args)
     end
 
     showTitle = true
+    -- to disable the skip text
+    hyperspeed = true
     local boardLen = 65
     if isAwesome then
         boardLen = 90
     end
+    
+    love.window.setTitle('Junk (for LD40, board by ' .. returnName .. ')')
     for delay=1,boardLen do
         args = coroutine.yield({board, boardStr})
     end
@@ -790,7 +810,6 @@ function love.update(dt)
             outro.currentTextRender = args[3]
         end
     elseif ControlState == ControlStates.LOAD_BOARD then
-
         if currentBoardLoader == nil then
             currentBoardLoader = coroutine.create(boardLoader)
         end
@@ -1103,10 +1122,6 @@ function love.draw()
        ControlState == ControlStates.GROUND or 
        ControlState == ControlStates.SCROLL_DOWN or 
        ControlState == ControlStates.COMPLETE then
-
-        if ControlState == ControlStates.GROW then 
-            print ("growing??") 
-        end
         currentBoard = Matrix.applyInto(boardWithGhost, currentRows, COLS, getCurrentPiece(currentPieceSpin), Tetris.sizes[currentPiece][1], Tetris.sizes[currentPiece][2], currentPieceRow, currentPieceCol)
     end
 
