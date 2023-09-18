@@ -4,6 +4,7 @@ local Input = require("input")
 local Net = require("net")
 local Dialogue = require("dialogue")
 local Save = require("save")
+local Framerate = require("framerate")
 
 local MIN_ROWS = 16
 local COLS = 10
@@ -415,6 +416,7 @@ function love.keypressed(key, scan, isrepeat)
         ControlStates.SHRINK or ControlState == ControlStates.SCROLL_UP or ControlState == ControlStates.SCROLL_DOWN then
 
         Input.keyPressed(key, scan, isrepeat)
+        Framerate.keyPressed(key, scan, isrepeat)
     end
 end
 
