@@ -5,6 +5,7 @@ local Net = require("net")
 local Dialogue = require("dialogue")
 local Save = require("save")
 local Framerate = require("framerate")
+local Window = require("window")
 
 local MIN_ROWS = 16
 local COLS = 10
@@ -452,6 +453,8 @@ function love.load()
     timerFont = love.graphics.newFont("fonts/coders_crux.ttf", 72)
     chatFont = love.graphics.newFont("fonts/coders_crux.ttf", 36)
 
+    Window.initialize()
+
     WIN_WIDTH, WIN_HEIGHT = love.window.getMode()
     TILE_SIZE = ((WIN_WIDTH + WIN_HEIGHT) / 4) / COLS;
 
@@ -845,6 +848,7 @@ function love.update(dt)
         end
         return
     elseif ControlState == ControlStates.DONE then
+        Window.save()
         if pleaseRestart then
             love.event.quit("restart")
         else

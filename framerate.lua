@@ -1,4 +1,5 @@
 local tick = require('lib/tick/tick')
+local Window = require("window")
 
 local Framerate = {
   slow = false
@@ -23,6 +24,7 @@ Framerate.keyPressed = function(key, scan, isrepeat)
       love.filesystem.remove(FRAMERATE_FILE)
     end
 
+    Window.save()
     love.event.quit('restart')
   end
 end
