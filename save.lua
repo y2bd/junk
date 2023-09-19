@@ -8,7 +8,7 @@ Save.save = function(username)
 end
 
 Save.isAwesome = function()
-    if love.filesystem.exists(SAVE_FILE) then
+    if love.filesystem.getInfo(SAVE_FILE) then
         local contents = love.filesystem.read(SAVE_FILE)
         if contents ~= nil then return contents
         else return false end

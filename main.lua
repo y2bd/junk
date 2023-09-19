@@ -445,6 +445,10 @@ function love.load()
     print("Starting the game ...")
     math.randomseed(os.time())
 
+    Window.initialize()
+    Tetris.initialize()
+    Input.initialize()
+
     love.keyboard.setKeyRepeat(false)
     love.graphics.setDefaultFilter("nearest", "nearest", 1)
     love.graphics.setBackgroundColor(38 / 255.0, 38 / 255.0, 38 / 255.0)
@@ -452,8 +456,6 @@ function love.load()
 
     timerFont = love.graphics.newFont("fonts/coders_crux.ttf", 72)
     chatFont = love.graphics.newFont("fonts/coders_crux.ttf", 36)
-
-    Window.initialize()
 
     WIN_WIDTH, WIN_HEIGHT = love.window.getMode()
     TILE_SIZE = ((WIN_WIDTH + WIN_HEIGHT) / 4) / COLS;
@@ -486,8 +488,6 @@ function love.load()
 
     timerActive = false
     timer = GAME_TIME
-
-    Input.initialize()
 
     local bn, lm, nm, bd = Net.getBoard()
     if bn ~= -1 then
