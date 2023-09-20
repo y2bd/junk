@@ -18,7 +18,7 @@ Keymap.loadKeymapFromSaveData = function()
         love.filesystem.write(KEYMAP_FILE, keymapString, #keymapString)
     end
 
-    local keymapArr = String.split(keymapString, ',')
+    local keymapArr = String.split(String.trim(keymapString), ',')
 
     local keymapTable = {}
     keymapTable.left = keymapArr[1]

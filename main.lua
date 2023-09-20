@@ -4,6 +4,8 @@ local Input = require("input")
 local Net = require("net")
 local Dialogue = require("dialogue")
 local Save = require("save")
+local Framerate = require("framerate")
+local Window = require("window")
 
 local MIN_ROWS = 16
 local COLS = 10
@@ -415,6 +417,7 @@ function love.keypressed(key, scan, isrepeat)
         ControlStates.SHRINK or ControlState == ControlStates.SCROLL_UP or ControlState == ControlStates.SCROLL_DOWN then
 
         Input.keyPressed(key, scan, isrepeat)
+        Framerate.keyPressed(key, scan, isrepeat)
     end
 end
 
@@ -441,6 +444,10 @@ end
 function love.load()
     print("Starting the game ...")
     math.randomseed(os.time())
+
+    Window.initialize()
+    Tetris.initialize()
+    Input.initialize()
 
     love.keyboard.setKeyRepeat(false)
     love.graphics.setDefaultFilter("nearest", "nearest", 1)
@@ -481,8 +488,6 @@ function love.load()
 
     timerActive = false
     timer = GAME_TIME
-
-    Input.initialize()
 
     local bn, lm, nm, bd = Net.getBoard()
     if bn ~= -1 then
@@ -843,6 +848,7 @@ function love.update(dt)
         end
         return
     elseif ControlState == ControlStates.DONE then
+        Window.save()
         if pleaseRestart then
             love.event.quit("restart")
         else

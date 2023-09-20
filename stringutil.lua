@@ -21,4 +21,8 @@ function String.split(str, pat)
     return t
 end
 
+function String.trim(str)
+    return (str:gsub("^%s*(.-)%s*$", "%1"))
+end
+
 return String
